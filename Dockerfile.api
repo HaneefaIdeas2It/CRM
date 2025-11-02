@@ -1,0 +1,35 @@
+# Simple Dockerfile for API - Development MVP
+FROM node:20-alpine
+
+# Install pnpm
+RUN npm install -g pnpm@8.15.0
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-workspace.yaml ./
+COPY turbo.json ./
+COPY tsconfig.json ./
+
+# Copy shared package with tsconfig
+COPY packages/shared ./packages/shared
+
+# Copy API app
+COPY apps/api ./apps/api
+
+# Install dependencies
+RUN pnpm install
+
+# Build shared package (from root so it can find tsconfig.json)
+RUN cd /app && pnpm --filter @crm/shared build
+
+# Generate Prisma client (optional - we're using pg for MVP)
+# RUN cd apps/api && pnpm run db:generate
+
+WORKDIR /app/apps/api
+
+# Expose port
+EXPOSE 4000
+
+# Start in development mode
+CMD ["pnpm", "run", "dev"]

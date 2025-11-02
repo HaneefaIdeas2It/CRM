@@ -1,0 +1,203 @@
+# ============================================
+# CRM System - Environment Variables Template
+# ============================================
+# Copy this file to .env and fill in your values
+# NEVER commit .env files to version control
+
+# ============================================
+# Application Configuration
+# ============================================
+NODE_ENV=development
+APP_NAME=CRM System
+APP_VERSION=1.0.0
+PORT=3000
+API_PORT=4000
+
+# ============================================
+# Database Configuration
+# ============================================
+DATABASE_URL=postgresql://username:password@localhost:5432/crm_dev?schema=public
+DATABASE_POOL_MIN=2
+DATABASE_POOL_MAX=10
+DATABASE_POOL_IDLE_TIMEOUT=30000
+
+# ============================================
+# Redis Configuration
+# ============================================
+REDIS_URL=redis://localhost:6379
+REDIS_PASSWORD=
+REDIS_DB=0
+REDIS_TTL=3600
+
+# ============================================
+# Authentication & Security
+# ============================================
+JWT_SECRET=your-super-secret-jwt-key-change-in-production-min-32-chars
+JWT_REFRESH_SECRET=your-super-secret-refresh-key-change-in-production
+JWT_EXPIRATION_TIME=15m
+JWT_REFRESH_EXPIRATION_TIME=7d
+BCRYPT_SALT_ROUNDS=12
+PASSWORD_MIN_LENGTH=12
+SESSION_SECRET=your-session-secret-change-in-production
+SESSION_COOKIE_NAME=crm_session
+SESSION_MAX_AGE=86400000
+
+# ============================================
+# API Configuration
+# ============================================
+API_BASE_URL=http://localhost:4000
+API_VERSION=v1
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+RATE_LIMIT_AUTH_MAX=5
+CORS_ORIGIN=http://localhost:3000
+CORS_CREDENTIALS=true
+
+# ============================================
+# File Storage (S3 / MinIO)
+# ============================================
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_S3_BUCKET_NAME=crm-uploads
+AWS_S3_ENDPOINT=
+MINIO_ENDPOINT=localhost
+MINIO_PORT=9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_USE_SSL=false
+MINIO_BUCKET_NAME=crm-uploads
+MAX_FILE_SIZE_MB=50
+ALLOWED_FILE_TYPES=jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,csv,txt
+
+# ============================================
+# Email Configuration (SMTP)
+# ============================================
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM_NAME=CRM System
+SMTP_FROM_EMAIL=noreply@yourdomain.com
+EMAIL_TEMPLATE_DIR=./src/infrastructure/email/templates
+
+# ============================================
+# AI & Analytics
+# ============================================
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4-turbo-preview
+OPENAI_TEMPERATURE=0.7
+OPENAI_MAX_TOKENS=2000
+POSTHOG_API_KEY=
+POSTHOG_HOST=https://app.posthog.com
+MIXPANEL_TOKEN=
+
+# ============================================
+# Monitoring & Observability
+# ============================================
+SENTRY_DSN=
+SENTRY_ENVIRONMENT=development
+SENTRY_RELEASE=
+DD_API_KEY=
+DD_APP_KEY=
+NEW_RELIC_LICENSE_KEY=
+LOG_LEVEL=debug
+LOG_FORMAT=json
+LOG_FILE=logs/app.log
+
+# ============================================
+# Job Queue (BullMQ)
+# ============================================
+BULLMQ_REDIS_URL=redis://localhost:6379
+BULLMQ_MAX_ATTEMPTS=3
+BULLMQ_RETRY_DELAY=5000
+
+# ============================================
+# External Integrations
+# ============================================
+STRIPE_API_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+PAYPAL_CLIENT_ID=
+PAYPAL_CLIENT_SECRET=
+PAYPAL_MODE=sandbox
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+MICROSOFT_CLIENT_ID=
+MICROSOFT_CLIENT_SECRET=
+
+# ============================================
+# Feature Flags
+# ============================================
+FEATURE_FLAG_AI_ENABLED=true
+FEATURE_FLAG_MFA_ENABLED=true
+FEATURE_FLAG_REALTIME_ENABLED=true
+FEATURE_FLAG_ANALYTICS_ENABLED=true
+
+# ============================================
+# Development & Testing
+# ============================================
+TEST_DATABASE_URL=postgresql://username:password@localhost:5432/crm_test?schema=public
+API_TEST_TIMEOUT=30000
+CI=false
+SKIP_ENV_VALIDATION=false
+
+# ============================================
+# Docker Configuration
+# ============================================
+COMPOSE_PROJECT_NAME=crm
+CONTAINER_MEMORY_LIMIT=512m
+CONTAINER_CPU_LIMIT=0.5
+
+# ============================================
+# Security Headers
+# ============================================
+CSP_DIRECTIVES=default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'
+HSTS_MAX_AGE=31536000
+HSTS_INCLUDE_SUBDOMAINS=true
+HSTS_PRELOAD=true
+
+# ============================================
+# Data Retention & Backups
+# ============================================
+BACKUP_ENABLED=true
+BACKUP_SCHEDULE=0 */6 * * *
+BACKUP_RETENTION_DAYS=30
+AUDIT_LOG_RETENTION_DAYS=365
+SOFT_DELETE_RETENTION_DAYS=30
+
+# ============================================
+# Admin Configuration
+# ============================================
+ADMIN_EMAIL=admin@yourdomain.com
+ADMIN_INITIAL_PASSWORD=ChangeMeInProduction!
+
+# ============================================
+# Performance Tuning
+# ============================================
+COMPRESSION_ENABLED=true
+COMPRESSION_THRESHOLD=1024
+DATABASE_QUERY_TIMEOUT=30000
+DATABASE_STATEMENT_TIMEOUT=30000
+CACHE_TTL_DEFAULT=3600
+CACHE_TTL_SHORT=300
+CACHE_TTL_LONG=86400
+
+# ============================================
+# Notification Configuration
+# ============================================
+FCM_SERVER_KEY=
+FCM_PROJECT_ID=
+SLACK_WEBHOOK_URL=
+SLACK_CHANNEL=#crm-alerts
+
+# ============================================
+# Compliance & Privacy
+# ============================================
+GDPR_ENABLED=true
+GDPR_DATA_EXPORT_ENABLED=true
+GDPR_DATA_DELETION_ENABLED=true
+ANONYMIZE_ANALYTICS=true
+PII_MASKING_ENABLED=true
+

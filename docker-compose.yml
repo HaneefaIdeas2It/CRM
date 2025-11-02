@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: crm-postgres
+    environment:
+      POSTGRES_DB: crm_dev
+      POSTGRES_USER: crm_user
+      POSTGRES_PASSWORD: crm
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crm_user -d crm_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: crm-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: crm-api
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DATABASE_URL: postgresql://crm_user:crm@postgres:5432/crm_dev?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ODA5Mzg0OTktY2Q0OC00MjllLWI2OTctNjcyYjNiMjFhMTM1MmU4YzU1OGItNmQ3OS00MmYxLTlkZjAtZjI1ZjQ4ZDViOTEw
+      JWT_REFRESH_SECRET: NzAzZmQyNjYtZmE5Ny00MTk3LTlkY2MtOGVmMjVlNjZjMjlmY2U2YTQ2ODEtMjkwNi00MDljLTliYjEtZTU2OWVlMDg4MGFi
+      JWT_EXPIRATION_TIME: 15m
+      JWT_REFRESH_EXPIRATION_TIME: 7d
+      BCRYPT_SALT_ROUNDS: 12
+      CORS_ORIGIN: http://localhost:3000
+      LOG_LEVEL: debug
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+

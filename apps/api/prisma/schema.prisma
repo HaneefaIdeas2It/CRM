@@ -1,0 +1,214 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique @db.VarChar(255)
+  passwordHash  String   @db.VarChar(255)
+  firstName     String   @db.VarChar(100)
+  lastName      String   @db.VarChar(100)
+  role          UserRole @default(USER)
+  organizationId String
+  organization  Organization @relation(fields: [organizationId], references: [id])
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+  mfaEnabled    Boolean  @default(false)
+  mfaSecret     String?  @db.VarChar(255)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  createdCustomers  Customer[] @relation("CreatedBy")
+  createdContacts   ContactHistory[] @relation("CreatedBy")
+  createdDeals      Deal[] @relation("Owner")
+  createdTasks      Task[] @relation("Assignee")
+  createdPipelines  Pipeline[]
+
+  @@index([email])
+  @@index([organizationId])
+  @@map("users")
+}
+
+model Organization {
+  id              String           @id @default(uuid())
+  name            String           @db.VarChar(255)
+  settings        Json             @default("{}")
+  subscriptionTier SubscriptionTier @default(FREE)
+  maxUsers        Int              @default(5)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Relations
+  users      User[]
+  pipelines  Pipeline[]
+  customers  Customer[]
+
+  @@map("organizations")
+}
+
+model Customer {
+  id           String   @id @default(uuid())
+  firstName    String   @db.VarChar(100)
+  lastName     String   @db.VarChar(100)
+  email        String   @unique @db.VarChar(255)
+  phone        String   @unique @db.VarChar(20)
+  company      String?  @db.VarChar(200)
+  tags         String[] @default([])
+  customFields Json?    @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime? // Soft delete
+  createdBy    String
+  organizationId String
+  creator      User     @relation("CreatedBy", fields: [createdBy], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  // Relations
+  contactHistory ContactHistory[]
+  deals          Deal[]
+  tasks          Task[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([company])
+  @@index([organizationId])
+  @@index([createdAt])
+  @@map("customers")
+}
+
+model ContactHistory {
+  id         String      @id @default(uuid())
+  customerId String
+  customer   Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type       ContactType
+  subject    String?     @db.VarChar(500)
+  body       String      @db.Text
+  duration   Int?        // minutes
+  attachments String[]   @default([])
+  aiSummary  String?     @db.Text
+  createdAt  DateTime    @default(now())
+  createdBy  String
+  creator    User        @relation("CreatedBy", fields: [createdBy], references: [id])
+
+  @@index([customerId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("contact_history")
+}
+
+model Pipeline {
+  id           String   @id @default(uuid())
+  name         String   @db.VarChar(255)
+  stages       Json     // Array of stage objects
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    String
+  organizationId String
+  creator      User     @relation(fields: [createdBy], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  // Relations
+  deals        Deal[]
+
+  @@index([organizationId])
+  @@index([isDefault])
+  @@map("pipelines")
+}
+
+model Deal {
+  id               String    @id @default(uuid())
+  customerId       String
+  customer         Customer  @relation(fields: [customerId], references: [id])
+  pipelineId       String
+  pipeline         Pipeline  @relation(fields: [pipelineId], references: [id])
+  stageId          String
+  title            String    @db.VarChar(255)
+  value            Decimal   @db.Decimal(15, 2)
+  currency         String    @db.VarChar(3) @default("USD")
+  expectedCloseDate DateTime?
+  actualCloseDate   DateTime?
+  probability      Int       @default(0) // 0-100
+  notes            String?   @db.Text
+  products         Json      @default("[]") // Array of line items
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  ownerId          String
+  owner            User      @relation("Owner", fields: [ownerId], references: [id])
+
+  @@index([customerId])
+  @@index([pipelineId])
+  @@index([stageId])
+  @@index([ownerId])
+  @@index([expectedCloseDate])
+  @@map("deals")
+}
+
+model Task {
+  id               String       @id @default(uuid())
+  title            String       @db.VarChar(255)
+  description      String?      @db.Text
+  priority         TaskPriority @default(MEDIUM)
+  status           TaskStatus   @default(PENDING)
+  dueDate          DateTime?
+  assigneeId       String
+  assignee         User         @relation("Assignee", fields: [assigneeId], references: [id])
+  relatedCustomerId String?
+  relatedCustomer    Customer?  @relation(fields: [relatedCustomerId], references: [id])
+  relatedDealId    String?
+  isRecurring      Boolean      @default(false)
+  recurrenceRule   String?      @db.VarChar(255)
+  timeSpent        Int?         // minutes
+  completedAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([assigneeId])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@index([relatedCustomerId])
+  @@map("tasks")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum ContactType {
+  CALL
+  EMAIL
+  MEETING
+  NOTE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETE
+}
+

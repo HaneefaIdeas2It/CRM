@@ -1,0 +1,362 @@
+# CRM System - Cursor AI Rules
+
+## Project Context
+This is a modern, cloud-native CRM system built with:
+- Frontend: Next.js 14, React 18, TypeScript 5, Tailwind CSS, Shadcn/ui
+- Backend: Node.js 20, Express 5, TypeScript 5, Prisma 5, tRPC 11
+- Database: PostgreSQL (primary), Redis (cache), MinIO/S3 (storage)
+- Architecture: Microservices + Serverless pattern
+- AI Integration: OpenAI API for analytics and automation
+
+## Core Development Principles
+
+### SOLID Principles (MANDATORY)
+- **Single Responsibility**: Each class/function does ONE thing well
+- **Open/Closed**: Extend functionality without modifying existing code
+- **Liskov Substitution**: Subtypes must be substitutable for base types
+- **Interface Segregation**: Small, focused interfaces over large fat interfaces
+- **Dependency Inversion**: Depend on abstractions, not concretions
+
+### Security (CRITICAL - ALWAYS APPLY)
+- ALWAYS validate and sanitize ALL user inputs using Zod schemas
+- ALWAYS use parameterized queries (Prisma handles this automatically)
+- ALWAYS hash passwords with bcrypt (minimum 12 rounds)
+- ALWAYS use JWT with secure options (expiry, issuer, audience)
+- NEVER expose secrets, API keys, or credentials in code
+- ALWAYS implement rate limiting on public APIs
+- ALWAYS use HTTPS/TLS 1.3 for all communications
+- ALWAYS implement proper CORS configuration
+- ALWAYS sanitize HTML output to prevent XSS
+- ALWAYS use environment variables for configuration
+
+### Architecture Patterns
+- **Repository Pattern**: Abstract data access layer
+- **Service Layer**: Business logic separated from API routes
+- **Dependency Injection**: Invert dependencies for testability
+- **Event-Driven**: Use events for async operations (email, notifications)
+- **API-First**: All frontend interactions via well-defined REST/tRPC APIs
+
+## Code Quality Standards
+
+### TypeScript
+- Use strict mode ALWAYS
+- NO `any` types - use `unknown` if type is truly unknown
+- Use proper interfaces for all data structures
+- Leverage type inference where appropriate
+- Use enum for fixed sets of values
+- Prefer `type` for unions/intersections, `interface` for object shapes
+
+### Naming Conventions
+- **Interfaces**: PascalCase (e.g., `CreateCustomerDto`, `CustomerService`)
+- **Classes**: PascalCase (e.g., `CustomerRepository`, `EmailService`)
+- **Functions**: camelCase with verbs (e.g., `createCustomer`, `validateEmail`)
+- **Variables**: camelCase, descriptive (e.g., `customerEmail`, `isEmailVerified`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `MAX_FILE_SIZE`, `DEFAULT_PAGE_SIZE`)
+- **Booleans**: Prefix with is/has/should/can (e.g., `isActive`, `hasPermission`)
+- **Private members**: Prefix with underscore (e.g., `_cache`, `_validateInput`)
+
+### Code Organization
+```
+src/
+├── api/              # API layer
+│   ├── controllers/  # Request handlers
+│   ├── middleware/   # Express middleware
+│   ├── routes/       # Route definitions
+│   └── validators/   # Zod validation schemas
+├── domain/           # Business logic
+│   ├── entities/     # Domain models
+│   ├── repositories/ # Data access interfaces
+│   ├── services/     # Business logic services
+│   └── value-objects/# Value objects (Email, Phone, etc.)
+├── infrastructure/   # External services
+│   ├── database/     # Prisma client, migrations
+│   ├── cache/        # Redis client
+│   ├── storage/      # S3/MinIO client
+│   └── external/     # Third-party APIs
+├── shared/           # Shared utilities
+│   ├── types/        # Shared TypeScript types
+│   ├── utils/        # Utility functions
+│   ├── constants/    # Constants
+│   └── errors/       # Custom error classes
+└── tests/            # Test files
+    ├── unit/
+    ├── integration/
+    └── e2e/
+```
+
+## API Design Standards
+
+### REST Endpoints
+```
+GET    /api/resource              # List resources
+POST   /api/resource              # Create resource
+GET    /api/resource/:id          # Get specific resource
+PUT    /api/resource/:id          # Update resource (full)
+PATCH  /api/resource/:id          # Update resource (partial)
+DELETE /api/resource/:id          # Delete resource
+```
+
+### Response Format
+```typescript
+// Success response
+{
+  success: true,
+  data: T,
+  metadata?: {
+    page?: number,
+    limit?: number,
+    total?: number,
+    totalPages?: number
+  }
+}
+
+// Error response
+{
+  success: false,
+  error: {
+    code: string,
+    message: string,
+    details?: unknown
+  }
+}
+```
+
+### Request Validation
+- ALL requests MUST be validated using Zod schemas
+- Return 400 with detailed error messages on validation failure
+- Sanitize inputs (trim, lowercase, etc.) during validation
+
+## Database Guidelines
+
+### Prisma Schema Standards
+- Use UUID for all primary keys
+- Add proper indexes for frequently queried fields
+- Use appropriate field types and constraints
+- Add createdAt/updatedAt to all tables
+- Implement soft delete with deletedAt field
+- Use @@map for custom table names
+
+### Query Optimization
+- Use select to fetch only needed fields
+- Include related data with include, not separate queries
+- Use transactions for multi-step operations
+- Add proper indexes for common query patterns
+- Use pagination for large result sets
+- Implement efficient filtering and sorting
+
+### Migration Safety
+- Always test migrations on staging first
+- Use safe migration patterns (add column nullable first, then backfill)
+- Never drop columns without deprecation period
+- Index creation should be CONCURRENTLY in production
+
+## Error Handling
+
+### Custom Error Classes
+```typescript
+// Create specialized error classes for different scenarios
+class NotFoundError extends AppError { }
+class ValidationError extends AppError { }
+class ConflictError extends AppError { }
+class UnauthorizedError extends AppError { }
+class ForbiddenError extends AppError { }
+```
+
+### Global Error Handler
+- Catch all errors in global middleware
+- Log errors with context (request ID, user, timestamp)
+- Return consistent error format to clients
+- Never expose internal errors in production
+- Implement error tracking (Sentry)
+
+## Testing Requirements
+
+### Unit Tests
+- Test all business logic in services
+- Mock external dependencies (database, APIs)
+- Aim for 80%+ code coverage
+- Use descriptive test names (Given-When-Then format)
+- Test edge cases and error scenarios
+
+### Integration Tests
+- Test API endpoints end-to-end
+- Use test database with migrations
+- Test authentication and authorization
+- Verify database interactions
+- Test data validation and transformation
+
+### E2E Tests
+- Test critical user journeys
+- Use Playwright or Cypress
+- Test across multiple browsers
+- Include accessibility testing
+- Performance regression tests
+
+## Performance Optimization
+
+### Frontend
+- Code splitting with dynamic imports
+- Memoization for expensive computations
+- Virtual scrolling for long lists
+- Image optimization (Next.js Image component)
+- Lazy loading for below-fold content
+
+### Backend
+- Implement Redis caching for frequently accessed data
+- Use connection pooling (Prisma handles this)
+- Batch operations where possible
+- Implement rate limiting
+- Use queue for heavy operations (BullMQ)
+
+### Database
+- Add proper indexes
+- Use efficient queries (avoid N+1 problems)
+- Implement database-level caching
+- Use read replicas for reporting queries
+- Regular VACUUM and ANALYZE
+
+## Security Best Practices
+
+### Authentication & Authorization
+- JWT with short expiry (15 minutes) and refresh tokens (7 days)
+- MFA support for sensitive operations
+- Role-based access control (RBAC)
+- Check permissions at every endpoint
+- Implement proper session management
+
+### Data Protection
+- Encrypt sensitive data at rest (database encryption)
+- Use HTTPS/TLS 1.3 everywhere
+- Sanitize all outputs to prevent XSS
+- Implement CSRF protection
+- Regular security audits and dependency updates
+
+### API Security
+- Rate limiting: 100 req/min per user, 1000/min per IP
+- Request timeout limits
+- Input validation on all endpoints
+- CORS with whitelist of allowed origins
+- API versioning (/v1/, /v2/)
+
+## Logging & Monitoring
+
+### Structured Logging
+- Use Winston or Pino for structured logs
+- Include context: user ID, request ID, timestamp, level
+- Log important events: user actions, errors, performance metrics
+- Never log sensitive data (passwords, tokens, PII)
+- Use appropriate log levels (debug, info, warn, error)
+
+### Monitoring
+- Track key metrics: response times, error rates, throughput
+- Set up alerts for critical issues
+- Monitor database query performance
+- Track user engagement metrics
+- Implement health check endpoints
+
+## Documentation
+
+### Code Comments
+- Document complex algorithms and business logic
+- Explain "why", not "what" (code should be self-explanatory)
+- Use JSDoc for public APIs
+- Keep comments up-to-date with code changes
+
+### API Documentation
+- Document all endpoints with OpenAPI/Swagger
+- Include request/response examples
+- Document authentication requirements
+- List possible error codes
+- Keep documentation in sync with code
+
+## Git & Version Control
+
+### Commit Messages
+- Use conventional commits (feat, fix, docs, refactor, test, chore)
+- Write clear, descriptive commit messages
+- Reference issue numbers when applicable
+- Keep commits focused and atomic
+
+### Branch Strategy
+- main/master: production-ready code
+- develop: integration branch
+- feature/*: new features
+- bugfix/*: bug fixes
+- hotfix/*: urgent production fixes
+
+### Code Review
+- All code must be reviewed before merge
+- Reviews should check: security, performance, tests, documentation
+- Address all review comments
+- Require CI/CD checks to pass
+
+## AI-Assisted Development Guidelines
+
+### When to Use Cursor AI
+- Generate boilerplate code and scaffolding
+- Refactor existing code following patterns
+- Write unit tests for functions
+- Debug error messages and stack traces
+- Explain complex code sections
+- Generate documentation
+
+### When NOT to Use Cursor AI
+- Write business-critical security logic without review
+- Make architectural decisions without team consultation
+- Skip code reviews because AI generated it
+- Blindly accept AI suggestions without understanding
+
+### AI Prompt Best Practices
+- Be specific about requirements and constraints
+- Provide context (relevant files, patterns to follow)
+- Break down complex tasks into smaller steps
+- Iterate on suggestions, don't settle for first output
+- Always review and test AI-generated code
+- Ask for explanations of complex logic
+
+## Performance Targets
+
+### Frontend
+- First Contentful Paint: < 1.5s
+- Time to Interactive: < 3s
+- Lighthouse score: > 90
+
+### Backend
+- API response time (p95): < 200ms
+- Database query time (p95): < 100ms
+- Throughput: 1000 req/s per service
+
+## Compliance
+
+### GDPR
+- Implement user data export
+- Support data deletion requests
+- Provide clear privacy policy
+- Log all data access
+- Anonymize analytics data
+
+### Security
+- Regular security audits
+- Automated vulnerability scanning
+- Penetration testing
+- Bug bounty program
+- Incident response plan
+
+## Reminders
+
+- ALWAYS validate input
+- ALWAYS handle errors gracefully
+- ALWAYS write tests for new features
+- ALWAYS review code before committing
+- ALWAYS document complex logic
+- ALWAYS consider security implications
+- ALWAYS optimize for performance
+- ALWAYS follow the established patterns
+- NEVER skip the review process
+- NEVER expose sensitive information
+
+## Additional Resources
+- See docs/requirements.md for detailed project requirements
+- See docs/crm-best-practices.md for development best practices
+- See README.md for setup and running instructions
+
